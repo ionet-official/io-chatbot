@@ -5,8 +5,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY io_chat_bot.py .
+COPY main.py .
+COPY app/ ./app/
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "io_chat_bot.py"]
+CMD ["python", "main.py"]

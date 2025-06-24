@@ -56,7 +56,7 @@ docker run --env-file .env io-chat-bot
 pip install -r requirements.txt
 
 # Run the bot
-python io_chat_bot.py
+python main.py
 ```
 
 ## Getting Your Tokens
@@ -160,23 +160,31 @@ LOG_LEVEL=DEBUG                # Logging level: DEBUG, INFO, WARNING, ERROR, CRI
 
 ```
 io-chat-bot/
-├── io_chat_bot.py        # Main bot file
-├── requirements.txt      # Python dependencies
-├── Dockerfile           # Docker container config
-├── .dockerignore        # Docker ignore rules
-├── .env.example         # Environment template
-├── .env                 # Your configuration (create this)
-├── logs/                # Log files directory
-└── README.md            # This file
+├── main.py              # Main entry point
+├── app/                 # Application modules
+│   ├── __init__.py      # Package initialization
+│   ├── config.py        # Configuration and environment variables
+│   ├── models.py        # Data models (Message, ConversationContext)
+│   ├── llm_client.py    # LLM API client
+│   ├── message_processor.py  # Message processing logic
+│   ├── discord.py       # Discord bot implementation
+│   └── telegram.py      # Telegram bot implementation
+├── requirements.txt     # Python dependencies
+├── Dockerfile          # Docker container config
+├── .dockerignore       # Docker ignore rules
+├── .env.example        # Environment template
+├── .env                # Your configuration (create this)
+└── README.md           # This file
 ```
 
 ### Extending the Bot
 
 The bot is designed for easy extension:
 
-- **Tool Integration**: Add tool calling in `LLMClient.generate_response()`
-- **New Platforms**: Extend `MessageProcessor` for Telegram support
-- **Custom Commands**: Add methods with `@commands.command()` decorator
+- **Tool Integration**: Add tool calling in `app/llm_client.py`
+- **New Platforms**: Create new bot implementations following `app/discord.py` or `app/telegram.py` patterns
+- **Custom Commands**: Add methods with `@commands.command()` decorator in respective bot files
+- **New Features**: Extend `MessageProcessor` in `app/message_processor.py`
 
 ### Logging
 
