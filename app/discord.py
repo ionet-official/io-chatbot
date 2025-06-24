@@ -181,7 +181,16 @@ class DiscordBot(commands.Bot):
                 for msg in reversed(context.messages):
                     if msg.is_bot:
                         logger.debug(f"Sending bot response to channel {message.channel.id}: {msg.content[:50]}...")
-                        await message.channel.send(msg.content)
+                        
+                        # Check if this is a DM or guild channel
+                        if isinstance(message.channel, discord.DMChannel):
+                            # In DMs, send response without ping
+                            response_text = msg.content
+                        else:
+                            # In guild channels, ping the user first
+                            response_text = f"{message.author.mention} {msg.content}"
+                        
+                        await message.channel.send(response_text)
                         break
         else:
             logger.error("Message processor not initialized")
