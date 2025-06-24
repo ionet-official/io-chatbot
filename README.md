@@ -1,10 +1,10 @@
 # IO Chat Bot
 
-A sophisticated multi-platform conversational bot (Discord & Telegram) powered by LLM with advanced message processing and shared conversation context management.
+A multi-platform conversational bot (Discord & Telegram) powered by IO Intelligence API with advanced message processing and shared conversation context management.
 
 ## Features
 
-- 🤖 **LLM Integration**: Uses `meta-llama/Llama-3.3-70B-Instruct` via OpenAI-compatible API
+- 🤖 **LLM Integration**: Uses `meta-llama/Llama-3.3-70B-Instruct` via IO Intelligence API
 - 🔄 **Multi-Platform**: Discord and Telegram support with shared conversation context
 - 💬 **Context Awareness**: Maintains conversation history per channel/chat
 - ⚡ **Async Processing**: Queue-based message processing with flow control
@@ -42,27 +42,16 @@ TELEGRAM_TOKEN=your_telegram_bot_token_here
 ### 3. Run with Docker (Recommended)
 
 ```bash
-# Build the image
 docker build -t io-chat-bot .
-
-# Run the container with environment file
 docker run --env-file .env io-chat-bot
 ```
 
 ### 4. Alternative: Run with Python
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Run the bot
 python main.py
 
-# Run tests
-pytest
-
-# Run tests with coverage
-pytest --cov=app --cov-report=html
 ```
 
 ## Getting Your Tokens
@@ -88,7 +77,7 @@ pytest --cov=app --cov-report=html
 
 1. Visit [IO Intelligence](https://ai.io.net/)
 2. Sign up/login to your account
-3. Generate an API key for `Llama-3.3-70B-Instruct` access
+3. Generate an API key
 
 ## Bot Usage
 
@@ -185,12 +174,12 @@ io-chat-bot/
 │   ├── test_discord.py  # Tests for Discord bot
 │   └── test_telegram.py # Tests for Telegram bot
 ├── requirements.txt     # Python dependencies
-├── pytest.ini          # Pytest configuration
-├── Dockerfile          # Docker container config
-├── .dockerignore       # Docker ignore rules
-├── .env.example        # Environment template
-├── .env                # Your configuration (create this)
-└── README.md           # This file
+├── pytest.ini           # Pytest configuration
+├── Dockerfile           # Docker container config
+├── .dockerignore        # Docker ignore rules
+├── .env.example         # Environment template
+├── .env                 # Your configuration (create this)
+└── README.md            # This file
 ```
 
 ### Extending the Bot
@@ -294,7 +283,7 @@ Then restart the bot to apply the new log level.
 
 ## Contributing
 
-1. Fork the repository
+1. Pull the repository
 2. Create a feature branch
 3. Make your changes
 4. Test thoroughly
@@ -308,7 +297,6 @@ MIT License - see LICENSE file for details.
 
 For issues and questions:
 - Check the troubleshooting section
-- Review logs in `io_chat_bot.log`
 - Open an issue on GitHub
 
 ---

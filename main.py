@@ -11,7 +11,6 @@ from app.message_processor import MessageProcessor
 from app.discord import DiscordBot
 from app.telegram import TelegramBot
 
-# Configure logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 log_level = getattr(logging, LOG_LEVEL, logging.DEBUG)
 logging.basicConfig(
