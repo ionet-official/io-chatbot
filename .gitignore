@@ -5,6 +5,9 @@
 .env.test.local
 .env.production.local
 
+*.backup
+
+
 # Python
 __pycache__/
 *.py[cod]

@@ -56,7 +56,13 @@ docker run --env-file .env io-chat-bot
 pip install -r requirements.txt
 
 # Run the bot
-python io_chat_bot.py
+python main.py
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=app --cov-report=html
 ```
 
 ## Getting Your Tokens
@@ -160,23 +166,80 @@ LOG_LEVEL=DEBUG                # Logging level: DEBUG, INFO, WARNING, ERROR, CRI
 
 ```
 io-chat-bot/
-├── io_chat_bot.py        # Main bot file
-├── requirements.txt      # Python dependencies
-├── Dockerfile           # Docker container config
-├── .dockerignore        # Docker ignore rules
-├── .env.example         # Environment template
-├── .env                 # Your configuration (create this)
-├── logs/                # Log files directory
-└── README.md            # This file
+├── main.py              # Main entry point
+├── app/                 # Application modules
+│   ├── __init__.py      # Package initialization
+│   ├── config.py        # Configuration and environment variables
+│   ├── models.py        # Data models (Message, ConversationContext)
+│   ├── llm_client.py    # LLM API client
+│   ├── message_processor.py  # Message processing logic
+│   ├── discord.py       # Discord bot implementation
+│   └── telegram.py      # Telegram bot implementation
+├── tests/               # Unit tests
+│   ├── __init__.py      # Test package initialization
+│   ├── conftest.py      # Pytest configuration and fixtures
+│   ├── test_models.py   # Tests for models module
+│   ├── test_config.py   # Tests for config module
+│   ├── test_llm_client.py      # Tests for LLM client
+│   ├── test_message_processor.py  # Tests for message processor
+│   ├── test_discord.py  # Tests for Discord bot
+│   └── test_telegram.py # Tests for Telegram bot
+├── requirements.txt     # Python dependencies
+├── pytest.ini          # Pytest configuration
+├── Dockerfile          # Docker container config
+├── .dockerignore       # Docker ignore rules
+├── .env.example        # Environment template
+├── .env                # Your configuration (create this)
+└── README.md           # This file
 ```
 
 ### Extending the Bot
 
 The bot is designed for easy extension:
 
-- **Tool Integration**: Add tool calling in `LLMClient.generate_response()`
-- **New Platforms**: Extend `MessageProcessor` for Telegram support
-- **Custom Commands**: Add methods with `@commands.command()` decorator
+- **Tool Integration**: Add tool calling in `app/llm_client.py`
+- **New Platforms**: Create new bot implementations following `app/discord.py` or `app/telegram.py` patterns
+- **Custom Commands**: Add methods with `@commands.command()` decorator in respective bot files
+- **New Features**: Extend `MessageProcessor` in `app/message_processor.py`
+
+### Testing
+
+The project includes comprehensive unit tests following Python best practices:
+
+```bash
+# Run all tests
+pytest
+
+# Run tests with coverage report
+pytest --cov=app --cov-report=html
+
+# Run specific test file
+pytest tests/test_models.py
+
+# Run tests matching a pattern
+pytest -k "test_message"
+
+# Run tests with verbose output
+pytest -v
+
+# Run tests and generate coverage report
+pytest --cov=app --cov-report=term-missing
+```
+
+**Test Coverage:**
+- **Models**: Data classes and business logic
+- **Config**: Environment variable handling
+- **LLM Client**: API communication and error handling  
+- **Message Processor**: Queue management and message flow
+- **Discord Bot**: Command handling and message processing
+- **Telegram Bot**: Update handling and response generation
+
+**Test Features:**
+- **Async Testing**: Full support for async/await patterns
+- **Mocking**: Comprehensive mocking of external dependencies
+- **Fixtures**: Reusable test data and setup
+- **Coverage**: 80%+ code coverage requirement
+- **CI Ready**: Configured for continuous integration
 
 ### Logging
 
