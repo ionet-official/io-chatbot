@@ -118,7 +118,17 @@ A conversational AI assistant powered by Llama-3.3-70B
             for msg in reversed(msg_context.messages):
                 if msg.is_bot:
                     logger.debug(f"Sending bot response to chat {chat_id}: {msg.content[:50]}...")
-                    await update.message.reply_text(msg.content)
+                    
+                    # Check if this is a private chat or group chat
+                    if update.effective_chat.type == 'private':
+                        # In private chats, send response without ping
+                        response_text = msg.content
+                    else:
+                        # In group chats, ping the user first
+                        user_mention = f"@{user.username}" if user.username else user.first_name or "User"
+                        response_text = f"{user_mention} {msg.content}"
+                    
+                    await update.message.reply_text(response_text)
                     break
         else:
             logger.error("Message processor not initialized")

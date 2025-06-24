@@ -133,6 +133,7 @@ class TestTelegramBot:
         update.effective_user.first_name = "TestUser"
         update.effective_user.username = "testuser"
         update.effective_chat.id = 123
+        update.effective_chat.type = 'group'  # Simulate group chat to test mention behavior
         update.message.date.timestamp.return_value = 1234567890.0
         update.message.message_id = 456
         update.message.reply_text = AsyncMock()
@@ -160,11 +161,47 @@ class TestTelegramBot:
         assert call_args[0][0] == 123  # chat_id
         assert isinstance(call_args[0][1], Message)
         
-        # Verify response was sent
-        update.message.reply_text.assert_called_once_with("Hi there!")
+        # Verify response was sent with user mention (since it's a group chat)
+        update.message.reply_text.assert_called_once_with("@testuser Hi there!")
         
         # Verify typing action was sent
         context.bot.send_chat_action.assert_called_once_with(chat_id=123, action="typing")
+
+    @pytest.mark.asyncio
+    async def test_handle_message_private_chat(self, telegram_bot):
+        """Test message handling in private chat (no mention)"""
+        # Create mock update for private chat
+        update = Mock()
+        update.message = Mock()
+        update.message.text = "Hello bot!"
+        update.effective_user = Mock()
+        update.effective_user.first_name = "TestUser"
+        update.effective_user.username = "testuser"
+        update.effective_chat.id = 123
+        update.effective_chat.type = 'private'  # Private chat - no mention needed
+        update.message.date.timestamp.return_value = 1234567890.0
+        update.message.message_id = 456
+        update.message.reply_text = AsyncMock()
+        
+        # Create mock context
+        context = Mock()
+        context.bot.send_chat_action = AsyncMock()
+        
+        # Mock message processor
+        telegram_bot.message_processor.add_message = AsyncMock()
+        telegram_bot.message_processor.contexts = {123: Mock()}
+        telegram_bot.message_processor.contexts[123].processing = False
+        
+        # Mock bot response
+        bot_message = Mock()
+        bot_message.is_bot = True
+        bot_message.content = "Hi there!"
+        telegram_bot.message_processor.contexts[123].messages = [bot_message]
+        
+        await telegram_bot._handle_message(update, context)
+        
+        # Verify response was sent without user mention (since it's a private chat)
+        update.message.reply_text.assert_called_once_with("Hi there!")
 
     @pytest.mark.asyncio
     async def test_handle_message_no_text(self, telegram_bot):

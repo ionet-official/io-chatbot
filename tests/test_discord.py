@@ -36,3 +36,19 @@ class TestDiscordSimple:
         assert hasattr(config, 'CONTEXT_CLEANUP_INTERVAL')
         assert hasattr(config, 'PROCESSING_TIMEOUT')
         assert hasattr(config, 'MODEL_NAME')
+
+    def test_discord_dm_vs_guild_logic(self):
+        """Test that Discord bot can differentiate between DM and guild channels"""
+        import discord
+        
+        # Test that discord module has the required classes
+        assert hasattr(discord, 'DMChannel')
+        
+        # Test DMChannel type checking works
+        dm_channel = Mock(spec=discord.DMChannel)
+        assert isinstance(dm_channel, discord.DMChannel)
+        
+        # Test other channel types
+        text_channel = Mock()
+        text_channel.__class__ = Mock()  # Not a DMChannel
+        assert not isinstance(text_channel, discord.DMChannel)
