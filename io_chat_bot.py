@@ -14,16 +14,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logs_dir = 'logs'
-os.makedirs(logs_dir, exist_ok=True)
-
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+log_level = getattr(logging, LOG_LEVEL, logging.DEBUG)
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(os.path.join(logs_dir, 'io_chat_bot.log')),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 

@@ -129,6 +129,9 @@ MAX_RESPONSE_LENGTH=2000       # Max characters in bot response
 
 # Cleanup
 CONTEXT_CLEANUP_INTERVAL=300   # Seconds between context cleanup
+
+# Logging
+LOG_LEVEL=DEBUG                # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
 ```
 
 ## Architecture
@@ -177,10 +180,11 @@ The bot is designed for easy extension:
 
 ### Logging
 
-Logs are written to both console and `io_chat_bot.log` file. Set log level in the code:
+Logs are written to console. Configure log level via environment variable:
 
-```python
-logging.basicConfig(level=logging.INFO)  # or DEBUG for verbose
+```bash
+# In your .env file
+LOG_LEVEL=INFO  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
 ```
 
 ## Troubleshooting
@@ -210,19 +214,12 @@ logging.basicConfig(level=logging.INFO)  # or DEBUG for verbose
 
 Set logging to `DEBUG` for detailed information about message processing:
 
-```python
-# In io_chat_bot.py, change line 31 from:
-logging.basicConfig(
-    level=logging.INFO,
-    # ... rest of config
-)
-
-# To:
-logging.basicConfig(
-    level=logging.DEBUG,
-    # ... rest of config
-)
+```bash
+# In your .env file
+LOG_LEVEL=DEBUG
 ```
+
+Then restart the bot to apply the new log level.
 
 **Debug logs include:**
 - Message queue operations and sizes
