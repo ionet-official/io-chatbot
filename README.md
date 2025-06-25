@@ -16,8 +16,8 @@ A multi-platform conversational bot (Discord & Telegram) powered by IO Intellige
 ### 1. Clone and Setup
 
 ```bash
-git clone <your-repo>
-cd io-chat-bot
+git clone https://github.com/ionet-official/io-chatbot
+cd io-chatbot
 ```
 
 ### 2. Configure Environment
@@ -42,8 +42,8 @@ TELEGRAM_TOKEN=your_telegram_bot_token_here
 ### 3. Run with Docker (Recommended)
 
 ```bash
-docker build -t io-chat-bot .
-docker run --env-file .env io-chat-bot
+docker build -t io-chatbot .
+docker run --env-file .env io-chatbot
 ```
 
 ### 4. Alternative: Run with Python
