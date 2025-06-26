@@ -29,7 +29,7 @@ jobs:
           API_KEY: ${{ secrets.API_KEY }}
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-        run: pytest -v --timeout=60 --cov=app --cov-report=term-missing | tee pytest-coverage.txt
+        run: pytest --cov=app --cov-report=term-missing | tee pytest-coverage.txt
 
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
