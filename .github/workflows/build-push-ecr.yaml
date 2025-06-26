@@ -1,0 +1,24 @@
+name: build-push-ecr
+
+on:
+  push:
+    branches:
+      - "dev"
+      - "main"
+jobs:
+  build-push:
+    permissions:
+      id-token: write
+      contents: write
+    uses: ionet-official/reusable-workflows/.github/workflows/build-push-ecr.yml@main
+    with:
+      ENV:  ${{ github.ref == 'refs/heads/main' && 'prod' || github.ref == 'refs/heads/dev' && 'dev' }}
+      AWS_REGION: us-west-1
+      SERVICE_NAME: chatbot
+      VALUES_FILE_NAME: chatbot.yaml
+      DOCKERFILE_NAME: Dockerfile
+      APP_ID: ${{ vars.ARGOCD_GITHUB_APP_ID }}
+    secrets:
+        SLACK_WEBHOOK : ${{ secrets.SLACK_WEBHOOK }}
+        OIDC_ROLE: ${{secrets.SHARED_INFRA_GH_ROLE}}
+        APP_PRIVATE_KEY: ${{secrets.ARGOCD_GITHUB_WEBAPP_PRIVATE_KEY}}
