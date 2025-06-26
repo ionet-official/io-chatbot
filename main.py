@@ -19,7 +19,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
-
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 class BotManager:
     """Manages both Discord and Telegram bots with shared components"""
