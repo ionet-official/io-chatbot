@@ -348,6 +348,7 @@ class TestTelegramBot:
         telegram_bot.application.initialize = AsyncMock()
         telegram_bot.application.start = AsyncMock()
         telegram_bot.application.updater.start_polling = AsyncMock()
+        telegram_bot.application.updater.running = False  # Mock to prevent infinite loop
         
         await telegram_bot.start()
         
