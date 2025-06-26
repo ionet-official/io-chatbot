@@ -140,6 +140,14 @@ A conversational AI assistant powered by Llama-3.3-70B
         await self.application.start()
         await self.application.updater.start_polling(drop_pending_updates=True)
         logger.info("Telegram Bot started successfully")
+        
+        # Keep the bot running until stopped
+        try:
+            while self.application.updater.running:
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            logger.info("Telegram bot task cancelled")
+            raise
 
     async def stop(self):
         """Stop the Telegram bot"""
