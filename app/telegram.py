@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import re
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -9,6 +10,34 @@ from .message_processor import MessageProcessor
 from .config import PROCESSING_TIMEOUT, MODEL_NAME
 
 logger = logging.getLogger(__name__)
+
+
+def convert_markdown_to_html(text):
+    """Convert Discord-style markdown to Telegram HTML"""
+    # Convert **bold** to <b>bold</b>
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    
+    # Convert *italic* to <i>italic</i>
+    text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+    
+    # Convert `code` to <code>code</code>
+    text = re.sub(r'`(.*?)`', r'<code>\1</code>', text)
+    
+    # Convert ```code block``` to <pre>code block</pre>
+    text = re.sub(r'```(.*?)```', r'<pre>\1</pre>', text, flags=re.DOTALL)
+    
+    # Escape HTML characters that aren't part of our tags
+    # We need to be careful not to escape our intentional HTML tags
+    text = text.replace('&', '&amp;')
+    text = text.replace('<', '&lt;').replace('>', '&gt;')
+    
+    # Restore our intentional HTML tags
+    text = text.replace('&lt;b&gt;', '<b>').replace('&lt;/b&gt;', '</b>')
+    text = text.replace('&lt;i&gt;', '<i>').replace('&lt;/i&gt;', '</i>')
+    text = text.replace('&lt;code&gt;', '<code>').replace('&lt;/code&gt;', '</code>')
+    text = text.replace('&lt;pre&gt;', '<pre>').replace('&lt;/pre&gt;', '</pre>')
+    
+    return text
 
 
 class TelegramBot:
@@ -89,8 +118,22 @@ A conversational AI assistant powered by Llama-3.3-70B
         user = update.effective_user
         chat_id = update.effective_chat.id
         message_text = update.message.text
+        bot_username = context.bot.username
 
         logger.debug(f"Received message from {user.first_name} in chat {chat_id}: {message_text[:100]}...")
+
+        # Check if bot should respond (similar to Discord logic)
+        is_private_chat = update.effective_chat.type == 'private'
+        is_mentioned = f"@{bot_username}" in message_text if bot_username else False
+        is_reply_to_bot = (update.message.reply_to_message and 
+                          update.message.reply_to_message.from_user and
+                          update.message.reply_to_message.from_user.id == context.bot.id)
+
+        logger.debug(f"Message triggers: private={is_private_chat}, mentioned={is_mentioned}, reply_to_bot={is_reply_to_bot}")
+
+        if not (is_private_chat or is_mentioned or is_reply_to_bot):
+            logger.debug("Message doesn't trigger bot, ignoring")
+            return
 
         msg = Message(
             content=message_text,
@@ -128,7 +171,9 @@ A conversational AI assistant powered by Llama-3.3-70B
                         user_mention = f"@{user.username}" if user.username else user.first_name or "User"
                         response_text = f"{user_mention} {msg.content}"
                     
-                    await update.message.reply_text(response_text)
+                    # Convert markdown to HTML for better Telegram formatting
+                    html_response = convert_markdown_to_html(response_text)
+                    await update.message.reply_text(html_response, parse_mode='HTML')
                     break
         else:
             logger.error("Message processor not initialized")
@@ -140,6 +185,14 @@ A conversational AI assistant powered by Llama-3.3-70B
         await self.application.start()
         await self.application.updater.start_polling(drop_pending_updates=True)
         logger.info("Telegram Bot started successfully")
+        
+        # Keep the bot running until stopped
+        try:
+            while self.application.updater.running:
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            logger.info("Telegram bot task cancelled")
+            raise
 
     async def stop(self):
         """Stop the Telegram bot"""

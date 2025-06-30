@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from telegram import Update, User, Chat, Message as TelegramMessage
 from telegram.ext import ContextTypes
 
-from app.telegram import TelegramBot
+from app.telegram import TelegramBot, convert_markdown_to_html
 from app.models import Message
 from app.message_processor import MessageProcessor
 
@@ -124,11 +124,11 @@ class TestTelegramBot:
 
     @pytest.mark.asyncio
     async def test_handle_message_success(self, telegram_bot):
-        """Test successful message handling"""
+        """Test successful message handling with bot mention"""
         # Create mock update
         update = Mock()
         update.message = Mock()
-        update.message.text = "Hello bot!"
+        update.message.text = "Hello @testbot!"  # Include bot mention
         update.effective_user = Mock()
         update.effective_user.first_name = "TestUser"
         update.effective_user.username = "testuser"
@@ -137,10 +137,13 @@ class TestTelegramBot:
         update.message.date.timestamp.return_value = 1234567890.0
         update.message.message_id = 456
         update.message.reply_text = AsyncMock()
+        update.message.reply_to_message = None  # No reply
         
         # Create mock context
         context = Mock()
         context.bot.send_chat_action = AsyncMock()
+        context.bot.username = "testbot"  # Set bot username for mention detection
+        context.bot.id = 999  # Bot ID
         
         # Mock message processor
         telegram_bot.message_processor.add_message = AsyncMock()
@@ -162,7 +165,7 @@ class TestTelegramBot:
         assert isinstance(call_args[0][1], Message)
         
         # Verify response was sent with user mention (since it's a group chat)
-        update.message.reply_text.assert_called_once_with("@testuser Hi there!")
+        update.message.reply_text.assert_called_once_with("@testuser Hi there!", parse_mode='HTML')
         
         # Verify typing action was sent
         context.bot.send_chat_action.assert_called_once_with(chat_id=123, action="typing")
@@ -201,7 +204,7 @@ class TestTelegramBot:
         await telegram_bot._handle_message(update, context)
         
         # Verify response was sent without user mention (since it's a private chat)
-        update.message.reply_text.assert_called_once_with("Hi there!")
+        update.message.reply_text.assert_called_once_with("Hi there!", parse_mode='HTML')
 
     @pytest.mark.asyncio
     async def test_handle_message_no_text(self, telegram_bot):
@@ -251,7 +254,7 @@ class TestTelegramBot:
 
     @pytest.mark.asyncio
     async def test_handle_message_user_name_fallback(self, telegram_bot):
-        """Test message handling with username fallback"""
+        """Test message handling with username fallback in private chat"""
         update = Mock()
         update.message = Mock()
         update.message.text = "Hello"
@@ -259,12 +262,16 @@ class TestTelegramBot:
         update.effective_user.first_name = None  # No first name
         update.effective_user.username = "testuser"
         update.effective_chat.id = 123
+        update.effective_chat.type = 'private'  # Private chat - no mention needed
         update.message.date.timestamp.return_value = time.time()
         update.message.message_id = 456
         update.message.reply_text = AsyncMock()
+        update.message.reply_to_message = None
         
         context = Mock()
         context.bot.send_chat_action = AsyncMock()
+        context.bot.username = "testbot"
+        context.bot.id = 999
         
         telegram_bot.message_processor.add_message = AsyncMock()
         telegram_bot.message_processor.contexts = {123: Mock()}
@@ -280,7 +287,7 @@ class TestTelegramBot:
 
     @pytest.mark.asyncio
     async def test_handle_message_unknown_user_fallback(self, telegram_bot):
-        """Test message handling with 'Unknown' fallback"""
+        """Test message handling with 'Unknown' fallback in private chat"""
         update = Mock()
         update.message = Mock()
         update.message.text = "Hello"
@@ -288,12 +295,16 @@ class TestTelegramBot:
         update.effective_user.first_name = None
         update.effective_user.username = None
         update.effective_chat.id = 123
+        update.effective_chat.type = 'private'  # Private chat - no mention needed
         update.message.date.timestamp.return_value = time.time()
         update.message.message_id = 456
         update.message.reply_text = AsyncMock()
+        update.message.reply_to_message = None
         
         context = Mock()
         context.bot.send_chat_action = AsyncMock()
+        context.bot.username = "testbot"
+        context.bot.id = 999
         
         telegram_bot.message_processor.add_message = AsyncMock()
         telegram_bot.message_processor.contexts = {123: Mock()}
@@ -306,6 +317,36 @@ class TestTelegramBot:
         call_args = telegram_bot.message_processor.add_message.call_args
         message = call_args[0][1]
         assert message.author == "Unknown"
+
+    @pytest.mark.asyncio
+    async def test_handle_message_ignores_non_triggered_messages(self, telegram_bot):
+        """Test that bot ignores messages in groups without mention/reply"""
+        update = Mock()
+        update.message = Mock()
+        update.message.text = "Hello everyone!"  # No bot mention
+        update.effective_user = Mock()
+        update.effective_user.first_name = "TestUser"
+        update.effective_user.username = "testuser"
+        update.effective_chat.id = 123
+        update.effective_chat.type = 'group'  # Group chat
+        update.message.date.timestamp.return_value = time.time()
+        update.message.message_id = 456
+        update.message.reply_text = AsyncMock()
+        update.message.reply_to_message = None  # No reply
+        
+        context = Mock()
+        context.bot.send_chat_action = AsyncMock()
+        context.bot.username = "testbot"
+        context.bot.id = 999
+        
+        telegram_bot.message_processor.add_message = AsyncMock()
+        
+        await telegram_bot._handle_message(update, context)
+        
+        # Verify message was NOT added to processor (bot should ignore it)
+        telegram_bot.message_processor.add_message.assert_not_called()
+        update.message.reply_text.assert_not_called()
+        context.bot.send_chat_action.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_waits_for_processing(self, telegram_bot):
@@ -348,6 +389,7 @@ class TestTelegramBot:
         telegram_bot.application.initialize = AsyncMock()
         telegram_bot.application.start = AsyncMock()
         telegram_bot.application.updater.start_polling = AsyncMock()
+        telegram_bot.application.updater.running = False  # Mock to prevent infinite loop
         
         await telegram_bot.start()
         
@@ -453,3 +495,25 @@ class TestTelegramBot:
             
             # Should log receiving message and adding to processor
             assert mock_logger.debug.call_count >= 2
+
+    def test_convert_markdown_to_html(self):
+        """Test markdown to HTML conversion function"""
+        # Test bold text
+        assert convert_markdown_to_html("**bold**") == "<b>bold</b>"
+        
+        # Test italic text
+        assert convert_markdown_to_html("*italic*") == "<i>italic</i>"
+        
+        # Test code
+        assert convert_markdown_to_html("`code`") == "<code>code</code>"
+        
+        # Test combined formatting
+        result = convert_markdown_to_html("**IO Net Assistant** provides *specific* info about `io.net`")
+        expected = "<b>IO Net Assistant</b> provides <i>specific</i> info about <code>io.net</code>"
+        assert result == expected
+        
+        # Test HTML escaping
+        result = convert_markdown_to_html("Test & escape < > characters")
+        assert "&amp;" in result
+        assert "&lt;" in result
+        assert "&gt;" in result

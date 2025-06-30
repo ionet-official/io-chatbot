@@ -276,7 +276,7 @@ class TestMessageProcessor:
         # Check that generate_response was called with system prompt
         call_args = mock_llm_client.generate_response.call_args[0][0]
         assert call_args[0]["role"] == "system"
-        assert "IO Chat" in call_args[0]["content"]
+        assert "IO Net Assistant" in call_args[0]["content"]
 
     def test_cleanup_stale_contexts_no_stale(self, processor):
         """Test cleanup when no contexts are stale"""

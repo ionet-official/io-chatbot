@@ -1,0 +1,101 @@
+name: build-push-ecr
+
+on:
+  push:
+    branches:
+      - "dev"
+      - "main"
+
+env:
+  AWS_REGION: us-west-1
+  SERVICE_NAME: chatbot
+  DOCKERFILE_NAME: Dockerfile
+  VALUES_FILE_NAME: chatbot.yaml
+  BUILD_CONTEXT: "."
+  ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || github.ref == 'refs/heads/dev' && 'dev' }}
+  APP_ID: ${{ vars.ARGOCD_GITHUB_APP_ID }}
+
+jobs:
+  build_push:
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        name: checkout repo code
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.SHARED_INFRA_GH_ROLE }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get short commit SHA
+        id: get-sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Docker build
+        id: build-image
+        run: |
+          ECR_REGISTRY=${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG=${{ github.ref_name }}-${{ steps.get-sha.outputs.sha_short }}
+          docker build -f ${{ env.DOCKERFILE_NAME }} -t $ECR_REGISTRY/${{ env.SERVICE_NAME }}:$IMAGE_TAG ${{ env.BUILD_CONTEXT }}
+          echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image=$ECR_REGISTRY/${{ env.SERVICE_NAME }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Docker push
+        id: push-image
+        run: |
+          docker push ${{ steps.build-image.outputs.image }}
+
+      - uses: actions/create-github-app-token@v1
+        id: temp-token
+        name: Generate temporary GitHub Token
+        with:
+          app-id: ${{ env.APP_ID }}
+          private-key: ${{ secrets.ARGOCD_GITHUB_WEBAPP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout k8s-deployments Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ENV == 'prod' && 'ionet-official/k8s-deployments-prod' || 'ionet-official/k8s-deployments-dev' }}
+          token: ${{ steps.temp-token.outputs.token }}
+          path: .tmp
+          fetch-depth: 0
+
+      - name: Update values file
+        run: |
+          cd .tmp/application/values/
+          sed -i'' -e "s/tag: \".*\"/tag: \"${{ steps.build-image.outputs.tag }}\"/" ./${{ env.VALUES_FILE_NAME }}
+
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+           token: ${{ steps.temp-token.outputs.token }}
+           author: ionet-chatbot <cicd-app@io.net>
+           committer: ionet-chatbot <cicd-app@io.net>
+           commit-message: Updated values.yaml file
+           path: .tmp
+           branch: "automation-${{ env.SERVICE_NAME }}"
+           base: main
+           delete-branch: true
+           title: '[automation] update values.yaml files automatically.'
+           body: 'This an automated PR to update tags in values.yaml files'
+           labels: |
+                 automerge
+
+      - name: Slack Notification failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_USERNAME: github-notifications
+          SLACK_MESSAGE: ":bell: Build-push-to-ECR Job failed for ${{ github.repository }} Repository."
+          SLACK_FOOTER: "ionet-2025"
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
