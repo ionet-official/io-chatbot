@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from telegram import Update, User, Chat, Message as TelegramMessage
 from telegram.ext import ContextTypes
 
-from app.telegram import TelegramBot
+from app.telegram import TelegramBot, convert_markdown_to_html
 from app.models import Message
 from app.message_processor import MessageProcessor
 
@@ -165,7 +165,7 @@ class TestTelegramBot:
         assert isinstance(call_args[0][1], Message)
         
         # Verify response was sent with user mention (since it's a group chat)
-        update.message.reply_text.assert_called_once_with("@testuser Hi there!", parse_mode='Markdown')
+        update.message.reply_text.assert_called_once_with("@testuser Hi there!", parse_mode='HTML')
         
         # Verify typing action was sent
         context.bot.send_chat_action.assert_called_once_with(chat_id=123, action="typing")
@@ -204,7 +204,7 @@ class TestTelegramBot:
         await telegram_bot._handle_message(update, context)
         
         # Verify response was sent without user mention (since it's a private chat)
-        update.message.reply_text.assert_called_once_with("Hi there!", parse_mode='Markdown')
+        update.message.reply_text.assert_called_once_with("Hi there!", parse_mode='HTML')
 
     @pytest.mark.asyncio
     async def test_handle_message_no_text(self, telegram_bot):
@@ -495,3 +495,25 @@ class TestTelegramBot:
             
             # Should log receiving message and adding to processor
             assert mock_logger.debug.call_count >= 2
+
+    def test_convert_markdown_to_html(self):
+        """Test markdown to HTML conversion function"""
+        # Test bold text
+        assert convert_markdown_to_html("**bold**") == "<b>bold</b>"
+        
+        # Test italic text
+        assert convert_markdown_to_html("*italic*") == "<i>italic</i>"
+        
+        # Test code
+        assert convert_markdown_to_html("`code`") == "<code>code</code>"
+        
+        # Test combined formatting
+        result = convert_markdown_to_html("**IO Net Assistant** provides *specific* info about `io.net`")
+        expected = "<b>IO Net Assistant</b> provides <i>specific</i> info about <code>io.net</code>"
+        assert result == expected
+        
+        # Test HTML escaping
+        result = convert_markdown_to_html("Test & escape < > characters")
+        assert "&amp;" in result
+        assert "&lt;" in result
+        assert "&gt;" in result

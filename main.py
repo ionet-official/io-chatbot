@@ -3,14 +3,6 @@ import logging
 import os
 from typing import Optional
 
-from app.config import (
-    DISCORD_TOKEN, TELEGRAM_TOKEN, API_BASE_URL, API_KEY, MODEL_NAME
-)
-from app.llm_client import LLMClient
-from app.message_processor import MessageProcessor
-from app.discord import DiscordBot
-from app.telegram import TelegramBot
-
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 log_level = getattr(logging, LOG_LEVEL, logging.DEBUG)
 logging.basicConfig(
@@ -20,6 +12,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+
+from app.config import (
+    DISCORD_TOKEN, TELEGRAM_TOKEN, API_BASE_URL, API_KEY, MODEL_NAME
+)
+from app.llm_client import LLMClient
+from app.message_processor import MessageProcessor
+from app.discord import DiscordBot
+from app.telegram import TelegramBot
 
 class BotManager:
     """Manages both Discord and Telegram bots with shared components"""
