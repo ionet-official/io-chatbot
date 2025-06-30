@@ -165,7 +165,7 @@ class TestTelegramBot:
         assert isinstance(call_args[0][1], Message)
         
         # Verify response was sent with user mention (since it's a group chat)
-        update.message.reply_text.assert_called_once_with("@testuser Hi there!")
+        update.message.reply_text.assert_called_once_with("@testuser Hi there!", parse_mode='Markdown')
         
         # Verify typing action was sent
         context.bot.send_chat_action.assert_called_once_with(chat_id=123, action="typing")
@@ -204,7 +204,7 @@ class TestTelegramBot:
         await telegram_bot._handle_message(update, context)
         
         # Verify response was sent without user mention (since it's a private chat)
-        update.message.reply_text.assert_called_once_with("Hi there!")
+        update.message.reply_text.assert_called_once_with("Hi there!", parse_mode='Markdown')
 
     @pytest.mark.asyncio
     async def test_handle_message_no_text(self, telegram_bot):

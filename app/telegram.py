@@ -142,7 +142,7 @@ A conversational AI assistant powered by Llama-3.3-70B
                         user_mention = f"@{user.username}" if user.username else user.first_name or "User"
                         response_text = f"{user_mention} {msg.content}"
                     
-                    await update.message.reply_text(response_text)
+                    await update.message.reply_text(response_text, parse_mode='Markdown')
                     break
         else:
             logger.error("Message processor not initialized")
