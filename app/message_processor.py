@@ -122,7 +122,8 @@ class MessageProcessor:
                                      "- Use `code` for inline code or technical terms "
                                      "- Use bullet points with - or • for lists "
                                      "- Use [text](url) for links "
-                                     "- Avoid complex formatting, special characters, or platform-specific syntax")
+                                     "- Avoid complex formatting, special characters, or platform-specific syntax"
+                                     "- Keep responses concise and focused on the question asked, if the question is not related to IO Net ecosystem, still provide an answer, but keep it short and to the point like a universal assistant")
             
             system_prompt = {
                 "role": "system",
