@@ -116,10 +116,17 @@ class MessageProcessor:
             context_messages = context.get_context_messages()
             logger.debug(f"Retrieved {len(context_messages)} context messages for channel {channel_id}")
 
-            # Add system prompt
+            # Add system prompt with formatting instructions
+            formatting_instructions = ("\n\nIMPORTANT: Use only basic markdown formatting that works across platforms: "
+                                     "- Use *bold* for emphasis (single asterisks work on both platforms) "
+                                     "- Use `code` for inline code or technical terms "
+                                     "- Use bullet points with - or • for lists "
+                                     "- Use [text](url) for links "
+                                     "- Avoid complex formatting, special characters, or platform-specific syntax")
+            
             system_prompt = {
                 "role": "system",
-                "content": SYSTEM_PROMPT
+                "content": SYSTEM_PROMPT + formatting_instructions
             }
 
             messages = [system_prompt] + context_messages
