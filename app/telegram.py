@@ -11,8 +11,6 @@ from .config import PROCESSING_TIMEOUT, MODEL_NAME
 logger = logging.getLogger(__name__)
 
 
-
-
 class TelegramBot:
     """Telegram bot implementation"""
 
