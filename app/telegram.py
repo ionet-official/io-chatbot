@@ -89,8 +89,22 @@ A conversational AI assistant powered by Llama-3.3-70B
         user = update.effective_user
         chat_id = update.effective_chat.id
         message_text = update.message.text
+        bot_username = context.bot.username
 
         logger.debug(f"Received message from {user.first_name} in chat {chat_id}: {message_text[:100]}...")
+
+        # Check if bot should respond (similar to Discord logic)
+        is_private_chat = update.effective_chat.type == 'private'
+        is_mentioned = f"@{bot_username}" in message_text if bot_username else False
+        is_reply_to_bot = (update.message.reply_to_message and 
+                          update.message.reply_to_message.from_user and
+                          update.message.reply_to_message.from_user.id == context.bot.id)
+
+        logger.debug(f"Message triggers: private={is_private_chat}, mentioned={is_mentioned}, reply_to_bot={is_reply_to_bot}")
+
+        if not (is_private_chat or is_mentioned or is_reply_to_bot):
+            logger.debug("Message doesn't trigger bot, ignoring")
+            return
 
         msg = Message(
             content=message_text,
@@ -128,7 +142,7 @@ A conversational AI assistant powered by Llama-3.3-70B
                         user_mention = f"@{user.username}" if user.username else user.first_name or "User"
                         response_text = f"{user_mention} {msg.content}"
                     
-                    await update.message.reply_text(response_text)
+                    await update.message.reply_text(response_text, parse_mode='Markdown')
                     break
         else:
             logger.error("Message processor not initialized")

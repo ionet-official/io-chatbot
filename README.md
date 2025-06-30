@@ -96,8 +96,9 @@ The Discord bot responds to:
 ### Telegram Bot
 
 The Telegram bot responds to:
-- **All Messages**: Send any message directly to the bot
-- **Group Chats**: Add the bot to a group and interact normally
+- **Private Messages**: Send any message directly to the bot in private chat
+- **Mentions**: `@botusername hello there!` in group chats
+- **Replies**: Reply to any bot message in group chats
 
 **Commands:**
 - `/help` - Show help information
