@@ -8,7 +8,7 @@ from .models import Message, ConversationContext
 from .llm_client import LLMClient
 from .config import (
     MESSAGE_BATCH_SIZE, PROCESSING_TIMEOUT, RATE_LIMIT_DELAY, 
-    MAX_RESPONSE_LENGTH, MODEL_NAME
+    MAX_RESPONSE_LENGTH, SYSTEM_PROMPT
 )
 
 logger = logging.getLogger(__name__)
@@ -119,11 +119,7 @@ class MessageProcessor:
             # Add system prompt
             system_prompt = {
                 "role": "system",
-                "content": ("You are IO Chat, a helpful and conversational AI assistant. "
-                           "You're chatting in a Discord server. Keep responses natural, "
-                           "engaging, and appropriately sized for chat. Use Discord markdown "
-                           "formatting when helpful (like **bold** or *italics*). "
-                           "Be friendly but not overly enthusiastic.")
+                "content": SYSTEM_PROMPT
             }
 
             messages = [system_prompt] + context_messages

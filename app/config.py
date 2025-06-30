@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-
+import logging
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Required API configuration
@@ -23,3 +24,12 @@ PROCESSING_TIMEOUT = float(os.getenv("PROCESSING_TIMEOUT", "25.0"))
 RATE_LIMIT_DELAY = float(os.getenv("RATE_LIMIT_DELAY", "0.5"))
 MAX_RESPONSE_LENGTH = int(os.getenv("MAX_RESPONSE_LENGTH", "2000"))
 CONTEXT_CLEANUP_INTERVAL = int(os.getenv("CONTEXT_CLEANUP_INTERVAL", "300"))  # 5 minutes
+
+# System prompt configuration
+DEFAULT_SYSTEM_PROMPT = ("You are IO Chat, a helpful and conversational AI assistant. "
+                         "You're chatting in a Discord/Telegram servers. Keep responses natural, "
+                         "engaging, and appropriately sized for chat. Use Discord markdown "
+                         "formatting when helpful (like **bold** or *italics*). "
+                         "Be friendly but not overly enthusiastic.")
+
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", DEFAULT_SYSTEM_PROMPT)

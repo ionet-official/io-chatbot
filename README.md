@@ -126,8 +126,24 @@ MAX_RESPONSE_LENGTH=2000       # Max characters in bot response
 # Cleanup
 CONTEXT_CLEANUP_INTERVAL=300   # Seconds between context cleanup
 
+# Bot Behavior
+SYSTEM_PROMPT="Your custom system prompt here"  # Override default system prompt
+
 # Logging
 LOG_LEVEL=DEBUG                # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+```
+
+### Custom System Prompt
+
+You can customize the bot's behavior by setting a custom system prompt in your `.env` file:
+
+```bash
+SYSTEM_PROMPT="Your custom system prompt here"
+```
+
+For long prompts, use escaped strings with `\n` for line breaks:
+```bash
+SYSTEM_PROMPT="You are a helpful assistant.\nYou should be friendly and professional.\n\nAlways provide accurate information."
 ```
 
 ## Architecture
