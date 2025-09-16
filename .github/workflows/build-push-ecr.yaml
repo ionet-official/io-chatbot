@@ -90,6 +90,34 @@ jobs:
            labels: |
                  automerge
 
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: "table"
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          # severity: "CRITICAL,HIGH"
+          hide-progress: true
+          output: trivy.txt
+          
+      - name: Publish Trivy Output to Summary
+        if: always()
+        run: |
+          if [[ -s trivy.txt ]]; then
+            cat trivy.txt
+            {
+              echo "### CVE Scan Output"
+              # echo "<details><summary>Click to expand</summary>"
+              echo ""
+              echo '```terraform'
+              sed -n '/To disable this notice, set the TRIVY_DISABLE_VEX_NOTICE environment variable./,$p' trivy.txt | sed '1d'
+              echo '```'
+              # echo "</details>"
+            } >> $GITHUB_STEP_SUMMARY
+          fi
+          
       - name: Slack Notification failure
         if: failure()
         uses: rtCamp/action-slack-notify@v2
