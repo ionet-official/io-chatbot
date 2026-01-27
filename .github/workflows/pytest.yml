@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: dev-c500-core-eks
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
